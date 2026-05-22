@@ -13,7 +13,7 @@ permissions:
 jobs:
   agent-brain:
     # Se ejecuta solo si es un Pull Request y el comentario contiene la mención al bot
-    if: github.event.issue.pull_request && contains(github.event.comment.body, '@AgentRevisar')
+    if: github.event.issue.pull_request && contains(github.event.comment.body, '@AgentRevisar') && github.event.sender.type != 'Bot'
     runs-on: ubuntu-latest
 
     steps:
@@ -65,6 +65,14 @@ jobs:
 
       - name: Comentar resultado del agente
         if: always()
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.AGENT_REVISAR_APP_ID }}
+          private-key: ${{ secrets.AGENT_REVISAR_APP_PRIVATE_KEY }}
+
+      - name: Publicar comentario como AgentRevisar App
+        if: always()
         uses: actions/github-script@v7
         env:
           AGENT_EXIT_CODE: ${{ steps.run-agent.outputs.agent_exit_code }}
@@ -72,7 +80,7 @@ jobs:
           AGENT_SUMMARY: ${{ steps.run-agent.outputs.agent_summary }}
           AGENT_OUTPUT: ${{ steps.run-agent.outputs.agent_output }}
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ steps.app-token.outputs.token }}
           script: |
             const issue_number = context.payload.issue.number;
             const exitCode = process.env.AGENT_EXIT_CODE || "1";

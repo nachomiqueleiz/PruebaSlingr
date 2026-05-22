@@ -6,13 +6,6 @@ declare const process: {
 };
 
 // 1. Configuramos el cliente para apuntar a la API oficial de GitHub Copilot
-const githubToken = process.env.GITHUB_TOKEN;
-
-const copilot = new OpenAI({
-    apiKey: githubToken,
-    baseURL: "https://api.githubcopilot.com"
-});
-
 const SYSTEM_PROMPT = `Eres el motor de IA de slingr-review-agent. Tu único trabajo es analizar el comentario de un desarrollador en un PR y clasificar su intención.
 Las intenciones válidas son:
 - REVIEW_ALL: Si pide revisar todo, verificar la PR para mergear, o frases similares en inglés o español (ej: "revisa todo", "review all", "listo para mergear").
@@ -24,11 +17,22 @@ Responde estrictamente en formato JSON: { "intent": "VALOR" }`;
 
 async function main() {
     const commentBody = process.env.COMMENT_BODY;
+    const githubToken = process.env.GITHUB_TOKEN;
 
     if (!commentBody) {
         console.error("❌ No se recibió el comentario en la variable COMMENT_BODY");
         process.exit(1);
     }
+
+    if (!githubToken) {
+        console.error("❌ No se recibió el token en la variable GITHUB_TOKEN");
+        process.exit(1);
+    }
+
+    const copilot = new OpenAI({
+        apiKey: githubToken,
+        baseURL: "https://api.githubcopilot.com"
+    });
 
     // Limpiamos la mención del bot para analizar solo el comando del usuario
     const cleanComment = commentBody.replace(/@slingr-review-agent/g, '').trim();

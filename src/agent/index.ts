@@ -6,7 +6,7 @@ declare const process: {
 };
 
 // 1. Configuramos el cliente para apuntar a la API oficial de GitHub Copilot
-const SYSTEM_PROMPT = `Eres el motor de IA de slingr-review-agent. Tu único trabajo es analizar el comentario de un desarrollador en un PR y clasificar su intención.
+const SYSTEM_PROMPT = `Eres el motor de IA de AgentRevisar. Tu único trabajo es analizar el comentario de un desarrollador en un PR y clasificar su intención.
 Las intenciones válidas son:
 - REVIEW_ALL: Si pide revisar todo, verificar la PR para mergear, o frases similares en inglés o español (ej: "revisa todo", "review all", "listo para mergear").
 - RUN_TESTS: Si pide ejecutar la suite de pruebas o tests.
@@ -17,38 +17,33 @@ Responde estrictamente en formato JSON: { "intent": "VALOR" }`;
 
 async function main() {
     const commentBody = process.env.COMMENT_BODY;
-    const copilotApiKey = process.env.COPILOT_API_KEY || process.env.GITHUB_TOKEN;
+    const apiKey = process.env.AI_TOKEN || process.env.GITHUB_TOKEN || process.env.COPILOT_API_KEY;
+    const baseURL = process.env.AI_BASE_URL || "https://models.github.ai/inference";
+    const model = process.env.AI_MODEL || "openai/gpt-4.1-mini";
 
     if (!commentBody) {
         console.error("❌ No se recibió el comentario en la variable COMMENT_BODY");
         process.exit(1);
     }
 
-    if (!copilotApiKey) {
-        console.error("❌ Falta credencial. Configura COPILOT_API_KEY (o GITHUB_TOKEN) en el entorno.");
-        process.exit(1);
-    }
-
-    // El token nativo de GitHub Actions (ghs_*) es un token de App server-to-server
-    // y la API de Copilot lo rechaza para este endpoint.
-    if (copilotApiKey.startsWith("ghs_")) {
-        console.error("❌ Token no válido para Copilot API: se recibió un token de GitHub App (ghs_*). Usa un secret COPILOT_API_KEY con un token de usuario/PAT habilitado para Copilot.");
+    if (!apiKey) {
+        console.error("❌ Falta token para GitHub Models. Usa AI_TOKEN (pruebas locales/personal) o GITHUB_TOKEN (GitHub Actions/organización).");
         process.exit(1);
     }
 
     const copilot = new OpenAI({
-        apiKey: copilotApiKey,
-        baseURL: "https://api.githubcopilot.com"
+        apiKey,
+        baseURL
     });
 
     // Limpiamos la mención del bot para analizar solo el comando del usuario
-    const cleanComment = commentBody.replace(/@slingr-review-agent/g, '').trim();
+    const cleanComment = commentBody.replace(/@slingr-review-agent|@AgentRevisar/gi, '').trim();
     console.log(`🤖 [Agente] Analizando comentario: "${cleanComment}"`);
 
     try {
         // 2. Le preguntamos a Copilot qué quiere hacer el desarrollador
         const response = await copilot.chat.completions.create({
-            model: "gpt-4o", 
+            model,
             response_format: { type: "json_object" },
             messages: [
                 { role: "system", content: SYSTEM_PROMPT },

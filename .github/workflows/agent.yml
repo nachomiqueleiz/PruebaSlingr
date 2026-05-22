@@ -4,6 +4,10 @@ on:
   issue_comment:
     types: [created]
 
+permissions:
+  contents: read
+  models: read
+
 jobs:
   agent-brain:
     # Se ejecuta solo si es un Pull Request y el comentario contiene la mención al bot
@@ -27,8 +31,11 @@ jobs:
 
       - name: Ejecutar el cerebro del Agente
         env:
-          # Token de usuario/PAT habilitado para Copilot API (NO usar secrets.GITHUB_TOKEN)
-          COPILOT_API_KEY: ${{ secrets.COPILOT_API_KEY }}
+          # Camino único de autenticación para GitHub Models.
+          # En Actions tomamos el token del workflow (personal u organización).
+          AI_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AI_BASE_URL: https://models.github.ai/inference
+          AI_MODEL: openai/gpt-4.1-mini
           # Le pasamos el texto completo que escribió el programador
           COMMENT_BODY: ${{ github.event.comment.body }}
         run: pnpm agent

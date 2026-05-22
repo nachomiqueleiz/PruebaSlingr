@@ -7,7 +7,7 @@ on:
 jobs:
   agent-brain:
     # Se ejecuta solo si es un Pull Request y el comentario contiene la mención al bot
-    if: github.event.issue.pull_request && contains(github.event.comment.body, '@slingr-review-agent')
+    if: github.event.issue.pull_request && contains(github.event.comment.body, '@AgentRevisar')
     runs-on: ubuntu-latest
 
     steps:

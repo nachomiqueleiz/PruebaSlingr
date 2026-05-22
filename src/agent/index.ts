@@ -53,6 +53,7 @@ async function main() {
 
         const data = JSON.parse(response.choices[0].message.content || "{}");
         const intent = data.intent;
+    let summary = "Intencion no reconocida por el sistema.";
         
         console.log(`🎯 [Copilot] Intención detectada: ${intent}`);
 
@@ -60,19 +61,23 @@ async function main() {
         switch (intent) {
             case 'REVIEW_ALL':
                 console.log("🚀 [Ejecución] Iniciando la revisión completa (Linters + Tests + Docs)...");
+                summary = "Se detecto pedido de revision completa.";
                 // Aquí irán tus funciones reales más adelante
                 break;
                 
             case 'RUN_TESTS':
                 console.log("🧪 [Ejecución] Corriendo la suite de pruebas pre-merge...");
+                summary = "Se detecto pedido de ejecucion de tests.";
                 break;
 
             case 'REVIEW_CONVENTIONS':
                 console.log("🎨 [Ejecución] Revisando convenciones de código y formato...");
+                summary = "Se detecto pedido de revision de convenciones y formato.";
                 break;
 
             case 'NONE':
                 console.log("💤 [Info] El comentario no requiere ninguna acción del agente.");
+                summary = "No se detecto una orden de ejecucion.";
                 break;
 
             default:
@@ -80,8 +85,13 @@ async function main() {
                 break;
         }
 
+        console.log(`AGENT_INTENT=${intent ?? "UNKNOWN"}`);
+        console.log(`AGENT_SUMMARY=${summary}`);
+
     } catch (error) {
         console.error("❌ Error en el cerebro de Copilot:", error);
+        console.log("AGENT_INTENT=ERROR");
+        console.log("AGENT_SUMMARY=Error ejecutando el analisis de intencion.");
         process.exit(1);
     }
 }

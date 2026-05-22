@@ -4,7 +4,7 @@
   "description": "Laboratorio para el Review Agent usando Copilot",
   "main": "src/agent/index.ts",
   "scripts": {
-    "agent": "ts-node src/agent/index.ts"
+    "agent": "node --loader ts-node/esm src/agent/index.ts"
   },
   "dependencies": {
     "openai": "^4.28.0"

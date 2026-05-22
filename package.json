@@ -1,0 +1,17 @@
+{
+  "name": "slingr-review-agent-lab",
+  "version": "1.0.0",
+  "description": "Laboratorio para el Review Agent usando Copilot",
+  "main": "src/agent/index.ts",
+  "scripts": {
+    "agent": "ts-node src/agent/index.ts"
+  },
+  "dependencies": {
+    "openai": "^4.28.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.41",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}

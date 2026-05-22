@@ -1,0 +1,34 @@
+name: Review Agent Pipeline
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  agent-brain:
+    # Se ejecuta solo si es un Pull Request y el comentario contiene la mención al bot
+    if: github.event.issue.pull_request && contains(github.event.comment.body, '@slingr-review-agent')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar pnpm (Opcional, puedes usar npm)
+        run: npm install -g pnpm
+
+      - name: Instalar dependencias
+        run: pnpm install
+
+      - name: Ejecutar el cerebro del Agente
+        env:
+          # Pasamos el token nativo de GitHub que tiene acceso a Copilot de la empresa
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Le pasamos el texto completo que escribió el programador
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: pnpm agent

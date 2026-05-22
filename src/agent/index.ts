@@ -17,20 +17,27 @@ Responde estrictamente en formato JSON: { "intent": "VALOR" }`;
 
 async function main() {
     const commentBody = process.env.COMMENT_BODY;
-    const githubToken = process.env.GITHUB_TOKEN;
+    const copilotApiKey = process.env.COPILOT_API_KEY || process.env.GITHUB_TOKEN;
 
     if (!commentBody) {
         console.error("❌ No se recibió el comentario en la variable COMMENT_BODY");
         process.exit(1);
     }
 
-    if (!githubToken) {
-        console.error("❌ No se recibió el token en la variable GITHUB_TOKEN");
+    if (!copilotApiKey) {
+        console.error("❌ Falta credencial. Configura COPILOT_API_KEY (o GITHUB_TOKEN) en el entorno.");
+        process.exit(1);
+    }
+
+    // El token nativo de GitHub Actions (ghs_*) es un token de App server-to-server
+    // y la API de Copilot lo rechaza para este endpoint.
+    if (copilotApiKey.startsWith("ghs_")) {
+        console.error("❌ Token no válido para Copilot API: se recibió un token de GitHub App (ghs_*). Usa un secret COPILOT_API_KEY con un token de usuario/PAT habilitado para Copilot.");
         process.exit(1);
     }
 
     const copilot = new OpenAI({
-        apiKey: githubToken,
+        apiKey: copilotApiKey,
         baseURL: "https://api.githubcopilot.com"
     });
 

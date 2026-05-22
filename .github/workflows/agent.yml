@@ -27,8 +27,8 @@ jobs:
 
       - name: Ejecutar el cerebro del Agente
         env:
-          # Pasamos el token nativo de GitHub que tiene acceso a Copilot de la empresa
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Token de usuario/PAT habilitado para Copilot API (NO usar secrets.GITHUB_TOKEN)
+          COPILOT_API_KEY: ${{ secrets.COPILOT_API_KEY }}
           # Le pasamos el texto completo que escribió el programador
           COMMENT_BODY: ${{ github.event.comment.body }}
         run: pnpm agent

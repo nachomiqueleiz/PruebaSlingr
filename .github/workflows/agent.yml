@@ -3,11 +3,17 @@ name: Review Agent Pipeline
 on:
   issue_comment:
     types: [created]
+  workflow_dispatch:
+    inputs:
+      comment_body:
+        description: "Comentario a analizar"
+        required: true
+        type: string
 
 jobs:
   agent-brain:
     # Se ejecuta solo si es un Pull Request y el comentario contiene la mención al bot
-    if: github.event.issue.pull_request && contains(github.event.comment.body, '@AgentRevisar')
+    if: github.event_name == 'workflow_dispatch' || (github.event.issue.pull_request && contains(github.event.comment.body, '@AgentRevisar'))
     runs-on: ubuntu-latest
 
     steps:
@@ -30,5 +36,5 @@ jobs:
           # Pasamos el token nativo de GitHub que tiene acceso a Copilot de la empresa
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Le pasamos el texto completo que escribió el programador
-          COMMENT_BODY: ${{ github.event.comment.body }}
+          COMMENT_BODY: ${{ github.event.comment.body || inputs.comment_body }}
         run: pnpm agent

@@ -2,6 +2,16 @@ name: Review Agent Pipeline
 
 on:
   repository_dispatch:
+  workflow_dispatch:
+    inputs:
+      comment_body:
+        description: 'Mensaje para el agente (equivale a client_payload.comment_body)'
+        required: true
+        type: string
+      issue_number:
+        description: 'Issue/PR number opcional para publicar el resultado'
+        required: false
+        type: string
     types: [copilot-agent-run]
 
 permissions:
@@ -12,18 +22,18 @@ permissions:
 
 jobs:
   agent-brain:
-    # Se ejecuta solo cuando lo dispara repository_dispatch (por ejemplo, desde Copilot Cloud)
+    # Se ejecuta por repository_dispatch o manualmente por workflow_dispatch
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout del código
         uses: actions/checkout@v4
 
-      - name: Resolver payload de repository_dispatch
+      - name: Resolver payload del evento
         id: payload
         run: |
-          comment_body=$(jq -r '.client_payload.comment_body // .client_payload.comment // .client_payload.body // .client_payload.prompt // ""' "$GITHUB_EVENT_PATH")
-          issue_number=$(jq -r '.client_payload.issue_number // .client_payload.pr_number // .client_payload.pull_request.number // .client_payload.issue.number // ""' "$GITHUB_EVENT_PATH")
+          comment_body=$(jq -r '.client_payload.comment_body // .client_payload.comment // .client_payload.body // .client_payload.prompt // .inputs.comment_body // ""' "$GITHUB_EVENT_PATH")
+          issue_number=$(jq -r '.client_payload.issue_number // .client_payload.pr_number // .client_payload.pull_request.number // .client_payload.issue.number // .inputs.issue_number // ""' "$GITHUB_EVENT_PATH")
 
           {
             echo 'comment_body<<EOF'
@@ -36,7 +46,7 @@ jobs:
       - name: Validar payload mínimo
         if: steps.payload.outputs.comment_body == ''
         run: |
-          echo "Falta client_payload.comment_body (o comment/body/prompt) en repository_dispatch"
+          echo "Falta comment_body en client_payload (repository_dispatch) o en inputs (workflow_dispatch)"
           exit 1
 
       - name: Configurar Node.js
@@ -58,7 +68,7 @@ jobs:
           AI_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           AI_BASE_URL: https://models.github.ai/inference
           AI_MODEL: openai/gpt-4.1-mini
-          # Texto enviado por repository_dispatch
+          # Texto enviado por repository_dispatch o workflow_dispatch
           COMMENT_BODY: ${{ steps.payload.outputs.comment_body }}
         run: |
           set +e

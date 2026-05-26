@@ -13,8 +13,11 @@ jobs:
   dispatch-agent:
     if: |
       github.event.issue.pull_request &&
-      github.event.sender.type != 'Bot' &&
-      contains(github.event.comment.body, '@copilot')
+      github.event.sender.type == 'Bot' &&
+      (
+        github.event.sender.login == 'github-copilot[bot]' ||
+        github.event.sender.login == 'copilot-swe-agent[bot]'
+      )
     runs-on: ubuntu-latest
 
     steps:
@@ -25,6 +28,13 @@ jobs:
           script: |
             const body = context.payload.comment?.body || "";
             const issueNumber = context.payload.issue?.number;
+            const sender = context.payload.sender?.login || "";
+            const normalized = body.trim();
+
+            if (normalized !== "Run all tests") {
+              core.info(`Comentario ignorado: texto distinto a 'Run all tests' (${JSON.stringify(normalized)})`);
+              return;
+            }
 
             await github.rest.repos.createDispatchEvent({
               owner: context.repo.owner,
@@ -36,7 +46,7 @@ jobs:
                 pr_number: issueNumber,
                 source: 'copilot-pr-comment',
                 comment_id: context.payload.comment?.id,
-                sender: context.payload.sender?.login
+                sender
               }
             });
 

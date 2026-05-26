@@ -12,6 +12,7 @@ on:
         description: 'Issue/PR number opcional para publicar el resultado'
         required: false
         type: string
+    types: [copilot-agent-run]
 
 permissions:
   contents: read

@@ -2,16 +2,12 @@ name: Review Agent Pipeline
 
 on:
   repository_dispatch:
-    types: [agent_revisar]
+    types: [created]
   workflow_dispatch:
     inputs:
-      comment_body:
-        description: "Comentario a analizar"
-        required: true
-        type: string
-      issue_number:
-        description: "Numero de issue/PR para comentar resultado"
-        required: true
+      pr_number:
+        description: "Numero de PR para comentar resultado"
+        required: false
         type: string
 
 permissions:

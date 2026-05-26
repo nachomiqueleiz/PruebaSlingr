@@ -2,6 +2,7 @@ name: Review Agent Pipeline
 
 on:
   repository_dispatch:
+    types: [copilot-agent-run]
 
 permissions:
   contents: read

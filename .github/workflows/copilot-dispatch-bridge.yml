@@ -1,0 +1,43 @@
+name: Copilot Dispatch Bridge
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  issues: read
+  pull-requests: read
+
+jobs:
+  dispatch-agent:
+    if: |
+      github.event.issue.pull_request &&
+      github.event.sender.type != 'Bot' &&
+      contains(github.event.comment.body, '@copilot')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Disparar repository_dispatch para agent.yml
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const body = context.payload.comment?.body || "";
+            const issueNumber = context.payload.issue?.number;
+
+            await github.rest.repos.createDispatchEvent({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              event_type: 'copilot-agent-run',
+              client_payload: {
+                comment_body: body,
+                issue_number: issueNumber,
+                pr_number: issueNumber,
+                source: 'copilot-pr-comment',
+                comment_id: context.payload.comment?.id,
+                sender: context.payload.sender?.login
+              }
+            });
+
+            core.info(`repository_dispatch enviado para issue/pr #${issueNumber}`);
